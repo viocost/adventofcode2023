@@ -43,65 +43,53 @@ class Cache {
   }
 }
 
-function getNumberOfCombinations(springs, i, sequence, cache) {
+function cachedGetNumberOfCombinations(...args) {
+
+  _cache = {};
+
+  function _hashArgs(args) {
+    return args
+      .map((arg) => (Array.isArray(arg) ? arg.join(",") : arg))
+      .join("");
+  }
+
+}
+
+function getNumberOfCombinations(springs, i, sequence) {
   const lengthSprings = springs.length;
 
   if (i >= lengthSprings) {
     return Number(sequence.length == 0);
   }
 
-  if (cache.has(i, sequence)) {
-    return cache.get(i, sequence);
-  }
 
   if (springs[i] === ".") {
-    cache.set(
-      i,
-      sequence,
-      getNumberOfCombinations(springs, i + 1, sequence, cache)
-    );
-    return cache.get(i, sequence);
+    return getNumberOfCombinations(springs, i + 1, sequence)
   }
 
   if (springs[i] === "#") {
     if (canConsumeSequence(springs, i, sequence[0])) {
-      const newI = i + sequence[0] + 1;
-      cache.set(
-        i,
-        sequence,
-        getNumberOfCombinations(springs, newI, sequence.slice(1), cache)
-      );
-    } else {
-      cache.set(i, sequence, 0);
+      return getNumberOfCombinations(springs, newI, sequence.slice(1));
     }
-    return cache.get(i, sequence);
+    return 0;
   }
 
   if (springs[i] === "?") {
-    if (canConsumeSequence(springs, i, sequence[0], cache)) {
+    if (canConsumeSequence(springs, i, sequence[0])) {
       const newI = i + sequence[0] + 1;
-      cache.set(
-        i,
-        sequence,
-        getNumberOfCombinations(springs, newI, sequence.slice(1), cache) +
-          getNumberOfCombinations(springs, i + 1, sequence, cache)
-      );
-    } else {
-      cache.set(
-        i,
-        sequence,
-        getNumberOfCombinations(springs, i + 1, sequence, cache)
+      return (
+        getNumberOfCombinations(springs, newI, sequence.slice(1)) +
+        getNumberOfCombinations(springs, i + 1, sequence)
       );
     }
-
-    return cache.get(i, sequence);
+    return getNumberOfCombinations(springs, i + 1, sequence);
   }
 }
 
 console.log(
   lines.reduce(
     (acc, line) =>
-      acc + getNumberOfCombinations(line[0], 0, line[1], new Cache()),
+      acc + getNumberOfCombinations(line[0], 0, line[1]),
     0
   )
 );
